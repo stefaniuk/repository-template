@@ -31,6 +31,8 @@ Describe the context and the problem statement. Is there a relationship to other
 
 Note that environmental limitations or restrictions (for example accepted technology standards, commonly recognised patterns, engineering and architecture principles, organisational policies, and governance) may narrow the options. This must be explicitly documented. This is a point-in-time decision, recorded so it can be understood, justified, and revisited when needed.
 
+Note that any technology choice — including languages, frameworks, libraries, and tooling — must be aligned with and work well alongside the [Tech Radar](https://radar.engineering.england.nhs.uk/). The Tech Radar defines the default tools for each language stack; deviations require explicit justification within this ADR.
+
 ## Decision ✅
 
 ### Assumptions 🧩
@@ -43,45 +45,60 @@ List the decision drivers that motivate this decision or course of action. This 
 
 ### Options 🔀
 
-Consider a comprehensive set of alternative options. Include weighting or scoring if it improves clarity.
+Consider a comprehensive set of alternative options. Always use weighted scoring. Identify the top one or two criteria for this decision context and weight them higher than the rest. State the weighting method once and apply it consistently across all options.
 
 #### Option A: {Descriptive name} (Selected) ✅
 
+**Top criteria**: {Criterion 1, Criterion 2}
+
+**Weighted option score**: {0.0 — 5.0} (define the formula; use weights)
+
 Summarise the core idea behind the selected option, including how it works at a high level and any critical constraints or prerequisites.
 
-| Criteria (example) | Score/Notes                                   |
-| ------------------ | --------------------------------------------- |
-| Criterion 1        | ⭐⭐⭐ {reasoning for score}                  |
-| Criterion 2        | ⭐⭐ {reasoning for score}                    |
-| Criterion 3        | ⭐⭐⭐ {reasoning for score}                  |
-| Criterion 4        | ⭐⭐ {reasoning for score}                    |
-| Effort             | {T-shirt size or estimate with justification} |
+| Criteria (example) | Weight | Score/Notes                                   |
+| ------------------ | ------ | --------------------------------------------- |
+| Criterion 1        | {1-5}  | ⭐⭐⭐ {reasoning for score}                  |
+| Criterion 2        | {1-5}  | ⭐⭐ {reasoning for score}                    |
+| Criterion 3        | {1-5}  | ⭐⭐⭐ {reasoning for score}                  |
+| Criterion 4        | {1-5}  | ⭐⭐ {reasoning for score}                    |
+| Effort             | {1-5}  | {T-shirt size or estimate with justification} |
+| Total score        |        | {0.0 — 5.0}                                   |
 
 #### Option B: {Descriptive name}
 
+**Top criteria**: {Criterion 1, Criterion 2}
+
+**Weighted option score**: {0.0 — 5.0} (define the formula; use weights)
+
 Describe the second viable option, including the mechanisms involved and notable strengths/weaknesses.
 
-| Criteria (example) | Score/Notes                                   |
-| ------------------ | --------------------------------------------- |
-| Criterion 1        | ⭐⭐ {reasoning for score}                    |
-| Criterion 2        | ⭐⭐ {reasoning for score}                    |
-| Criterion 3        | ⭐ {reasoning for score}                      |
-| Criterion 4        | ⭐⭐⭐ {reasoning for score}                  |
-| Effort             | {T-shirt size or estimate with justification} |
+| Criteria (example) | Weight | Score/Notes                                   |
+| ------------------ | ------ | --------------------------------------------- |
+| Criterion 1        | {1-5}  | ⭐⭐ {reasoning for score}                    |
+| Criterion 2        | {1-5}  | ⭐⭐ {reasoning for score}                    |
+| Criterion 3        | {1-5}  | ⭐ {reasoning for score}                      |
+| Criterion 4        | {1-5}  | ⭐⭐⭐ {reasoning for score}                  |
+| Effort             | {1-5}  | {T-shirt size or estimate with justification} |
+| Total score        |        | {0.0 — 5.0}                                   |
 
 **Why not chosen**: Capture the concrete reasons this option was rejected. Reference measurable risks, constraints, or trade-offs evidenced in the codebase or architecture.
 
 #### Option C: {Descriptive name}
 
+**Top criteria**: {Criterion 1, Criterion 2}
+
+**Weighted option score**: {0.0 — 5.0} (define the formula; use weights)
+
 Describe the third option (or more if needed) with enough detail for readers to evaluate it at a glance.
 
-| Criteria (example) | Score/Notes                                   |
-| ------------------ | --------------------------------------------- |
-| Criterion 1        | ⭐⭐ {reasoning for score}                    |
-| Criterion 2        | ⭐ {reasoning for score}                      |
-| Criterion 3        | ⭐ {reasoning for score}                      |
-| Criterion 4        | ⭐⭐ {reasoning for score}                    |
-| Effort             | {T-shirt size or estimate with justification} |
+| Criteria (example) | Weight | Score/Notes                                   |
+| ------------------ | ------ | --------------------------------------------- |
+| Criterion 1        | {1-5}  | ⭐⭐ {reasoning for score}                    |
+| Criterion 2        | {1-5}  | ⭐ {reasoning for score}                      |
+| Criterion 3        | {1-5}  | ⭐ {reasoning for score}                      |
+| Criterion 4        | {1-5}  | ⭐⭐ {reasoning for score}                    |
+| Effort             | {1-5}  | {T-shirt size or estimate with justification} |
+| Total score        |        | {0.0 — 5.0}                                   |
 
 **Why not chosen**: Explain the specific drawbacks, blockers, or context conflicts that ruled out this option.
 
