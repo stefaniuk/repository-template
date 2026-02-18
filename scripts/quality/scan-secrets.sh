@@ -21,17 +21,24 @@ set -euo pipefail
 
 # ==============================================================================
 
+# Run secret scanning in native or Docker mode.
 function main() {
 
   cd "$(git rev-parse --show-toplevel)"
 
+  local dir
+  local cmd
   if command -v gitleaks > /dev/null 2>&1 && ! is-arg-true "${FORCE_USE_DOCKER:-false}"; then
     dir="$PWD"
-    cmd="$(get-cmd-to-run)" run-gitleaks-natively
+    cmd="$(get-cmd-to-run)"
+    cmd="$cmd" run-gitleaks-natively
   else
     dir="/workdir"
-    cmd="$(get-cmd-to-run)" run-gitleaks-in-docker
+    cmd="$(get-cmd-to-run)"
+    cmd="$cmd" run-gitleaks-in-docker
   fi
+
+  return 0
 }
 
 # Get Gitleaks command to execute and configuration.
@@ -39,7 +46,8 @@ function main() {
 #   dir=[project's top-level directory]
 function get-cmd-to-run() {
 
-  check=${check:-staged-changes}
+  local check=${check:-staged-changes}
+  local cmd
   case $check in
     "whole-history")
       cmd="detect --source $dir --verbose --redact"
@@ -49,6 +57,10 @@ function get-cmd-to-run() {
       ;;
     "staged-changes")
       cmd="protect --source $dir --verbose --staged"
+      ;;
+    *)
+      echo "Unrecognised check mode: $check" >&2
+      return 126
       ;;
   esac
   # Include base line file if it exists
@@ -63,6 +75,8 @@ function get-cmd-to-run() {
   fi
 
   echo "$cmd"
+
+  return 0
 }
 
 # Run Gitleaks natively.
@@ -72,6 +86,8 @@ function run-gitleaks-natively() {
 
   # shellcheck disable=SC2086
   gitleaks $cmd
+
+  return 0
 }
 
 # Run Gitleaks in a Docker container.
@@ -88,13 +104,18 @@ function run-gitleaks-in-docker() {
   # shellcheck disable=SC2086
   docker run --rm --platform linux/amd64 \
     --volume "$PWD:$dir" \
-    --workdir $dir \
+    --workdir "$dir" \
     "$image" \
       $cmd
+
+  return 0
 }
 
 # ==============================================================================
 
+# Check whether the supplied argument represents a true boolean value.
+# Arguments:
+#   $1=[value to evaluate]
 function is-arg-true() {
 
   if [[ "$1" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$ ]]; then

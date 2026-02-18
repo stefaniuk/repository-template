@@ -26,7 +26,7 @@ function docker-build() {
   version-create-effective-file
   _create-effective-dockerfile
 
-  tag=$(_get-effective-tag)
+  local tag=$(_get-effective-tag)
 
   docker build \
     --progress=plain \
@@ -51,6 +51,8 @@ function docker-build() {
       docker tag "${tag}" "${DOCKER_IMAGE}:${version}"
     fi
   done
+
+  return 0
 }
 
 # Create the Dockerfile.effective file to bake in version info
@@ -62,6 +64,8 @@ function docker-bake-dockerfile() {
 
   version-create-effective-file
   _create-effective-dockerfile
+
+  return 0
 }
 
 # Run hadolint over the generated Dockerfile.
@@ -69,7 +73,10 @@ function docker-bake-dockerfile() {
 #  dir=[path to the image directory where the Dockerfile.effective is located, default is '.']
 function docker-lint() {
   local dir=${dir:-$PWD}
-  file=${dir}/Dockerfile.effective ./scripts/docker/dockerfile-linter.sh
+  local file="${dir}/Dockerfile.effective"
+  file="$file" ./scripts/docker/dockerfile-linter.sh
+
+  return 0
 }
 
 # Check test Docker image.
@@ -88,6 +95,8 @@ function docker-check-test() {
     "${DOCKER_IMAGE}:$(_get-effective-version)" 2>/dev/null \
     ${cmd:-} \
   | grep -q "${check}" && echo PASS || echo FAIL
+
+  return 0
 }
 
 # Run Docker image.
@@ -105,6 +114,8 @@ function docker-run() {
     ${args:-} \
     "${tag}" \
     ${DOCKER_CMD:-}
+
+  return 0
 }
 
 # Push Docker image.
@@ -118,6 +129,8 @@ function docker-push() {
   for version in $(dir="$dir" _get-all-effective-versions) latest; do
     docker push "${DOCKER_IMAGE}:${version}"
   done
+
+  return 0
 }
 
 # Remove Docker resources.
@@ -134,6 +147,8 @@ function docker-clean() {
     .version \
     Dockerfile.effective \
     Dockerfile.effective.dockerignore
+
+  return 0
 }
 
 # Create effective version from the VERSION file.
@@ -158,6 +173,8 @@ function version-create-effective-file() {
       sed "s/\(\${hash}\|\$hash\)/$(git rev-parse --short HEAD)/g" \
     > "$dir/.version"
   fi
+
+  return 0
 }
 
 # ==============================================================================
@@ -187,6 +204,7 @@ function docker-get-image-version-and-pull() {
   local versions_file="${TOOL_VERSIONS:=$(git rev-parse --show-toplevel)/.tool-versions}"
   local version="latest"
   if [ -f "$versions_file" ]; then
+    local line
     line=$(grep "docker/${name} " "$versions_file" | sed "s/^#\s*//; s/\s*#.*$//" | grep "${match_version:-".*"}" || true)
     [ -n "$line" ] && version=$(echo "$line" | awk '{print $2}')
   fi
@@ -214,6 +232,8 @@ function docker-get-image-version-and-pull() {
   fi
 
   echo "${name}:${version}"
+
+  return 0
 }
 
 # ==============================================================================
@@ -236,6 +256,8 @@ function _create-effective-dockerfile() {
   cp "${dir}/Dockerfile" "${dir}/Dockerfile.effective"
   _replace-image-latest-by-specific-version
   _append-metadata
+
+  return 0
 }
 
 # Replace image:latest by a specific version.
@@ -250,12 +272,16 @@ function _replace-image-latest-by-specific-version() {
 
   if [ -f "$versions_file" ]; then
     # First, list the entries specific for Docker to take precedence, then the rest but exclude comments
+    local content
     content=$(grep " docker/" "$versions_file"; grep -v " docker/" "$versions_file" ||: | grep -v "^#")
     echo "$content" | while IFS= read -r line; do
       [ -z "$line" ] && continue
-      line=$(echo "$line" | sed "s/^#\s*//; s/\s*#.*$//" | sed "s;docker/;;")
-      name=$(echo "$line" | awk '{print $1}')
-      version=$(echo "$line" | awk '{print $2}')
+      local effective_line
+      local name
+      local version
+      effective_line=$(echo "$line" | sed "s/^#\s*//; s/\s*#.*$//" | sed "s;docker/;;")
+      name=$(echo "$effective_line" | awk '{print $1}')
+      version=$(echo "$effective_line" | awk '{print $2}')
       sed -i "s;\(FROM .*\)${name}:latest;\1${name}:${version};g" "$dockerfile"
     done
   fi
@@ -276,6 +302,8 @@ function _replace-image-latest-by-specific-version() {
 
   # Do not ignore the issue if 'latest' is used in the effective image
   sed -Ei "/# hadolint ignore=DL3007$/d" "${dir}/Dockerfile.effective"
+
+  return 0
 }
 
 # Append metadata to the end of Dockerfile.
@@ -290,6 +318,8 @@ function _append-metadata() {
     "$(git rev-parse --show-toplevel)/scripts/docker/Dockerfile.metadata" \
   > "$dir/Dockerfile.effective.tmp"
   mv "$dir/Dockerfile.effective.tmp" "$dir/Dockerfile.effective"
+
+  return 0
 }
 
 # Print top Docker image version.
@@ -300,6 +330,8 @@ function _get-effective-version() {
   local dir=${dir:-$PWD}
 
   head -n 1 "${dir}/.version" 2> /dev/null ||:
+
+  return 0
 }
 
 # Print the effective tag for the image with the version. If you don't have a VERSION file
@@ -309,11 +341,13 @@ function _get-effective-version() {
 function _get-effective-tag() {
 
   local tag=$DOCKER_IMAGE
-  version=$(_get-effective-version)
+  local version=$(_get-effective-version)
   if [ -n "$version" ]; then
     tag="${tag}:${version}"
   fi
   echo "$tag"
+
+  return 0
 }
 
 # Print all Docker image versions.
@@ -324,6 +358,8 @@ function _get-all-effective-versions() {
   local dir=${dir:-$PWD}
 
   cat "${dir}/.version" 2> /dev/null ||:
+
+  return 0
 }
 
 # Print Git branch name. Check the GitHub variables first and then the local Git
@@ -340,4 +376,6 @@ function _get-git-branch-name() {
   fi
 
   echo "$branch_name"
+
+  return 0
 }

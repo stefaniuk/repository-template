@@ -15,6 +15,7 @@ set -euo pipefail
 
 # ==============================================================================
 
+# Run dockerfile linter in native or Docker mode.
 function main() {
 
   cd "$(git rev-parse --show-toplevel)"
@@ -25,6 +26,8 @@ function main() {
   else
     file="$file" run-hadolint-in-docker
   fi
+
+  return 0
 }
 
 # Run hadolint natively.
@@ -34,6 +37,8 @@ function run-hadolint-natively() {
 
   # shellcheck disable=SC2001
   hadolint "$(echo "$file" | sed "s#$PWD#.#")"
+
+  return 0
 }
 
 # Run hadolint in a Docker container.
@@ -54,10 +59,15 @@ function run-hadolint-in-docker() {
       hadolint \
         --config /workdir/scripts/config/hadolint.yaml \
         "/workdir/$(echo "$file" | sed "s#$PWD#.#")"
+
+  return 0
 }
 
 # ==============================================================================
 
+# Check whether the supplied argument represents a true boolean value.
+# Arguments:
+#   $1=[value to evaluate]
 function is-arg-true() {
 
   if [[ "$1" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$ ]]; then

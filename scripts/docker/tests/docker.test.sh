@@ -13,6 +13,7 @@ set -euo pipefail
 
 # ==============================================================================
 
+# Execute the Docker shell test suite.
 function main() {
 
   cd "$(git rev-parse --show-toplevel)"
@@ -22,8 +23,8 @@ function main() {
   DOCKER_IMAGE=repository-template/docker-test
   DOCKER_TITLE="Repository Template Docker Test"
 
-  test-docker-suite-setup
-  tests=( \
+  test-suite-setup
+  local tests=( \
     test-docker-build \
     test-docker-image-from-signature \
     test-docker-version-file \
@@ -41,24 +42,31 @@ function main() {
     }
   done
   echo "Total: ${#tests[@]}, Passed: $(( ${#tests[@]} - status )), Failed: $status"
-  test-docker-suite-teardown
+  test-suite-teardown
   [ $status -gt 0 ] && return 1 || return 0
 }
 
 # ==============================================================================
 
-function test-docker-suite-setup() {
+# Set up suite-level fixtures.
+function test-suite-setup() {
 
   :
+
+  return 0
 }
 
-function test-docker-suite-teardown() {
+# Tear down suite-level fixtures.
+function test-suite-teardown() {
 
   :
+
+  return 0
 }
 
 # ==============================================================================
 
+# Test Docker image build.
 function test-docker-build() {
 
   # Arrange
@@ -69,17 +77,20 @@ function test-docker-build() {
   docker image inspect "${DOCKER_IMAGE}:$(_get-effective-version)" > /dev/null 2>&1 && return 0 || return 1
 }
 
+# Test replacement of `latest` image signatures.
 function test-docker-image-from-signature() {
 
   # Arrange
-  TOOL_VERSIONS="$(git rev-parse --show-toplevel)/scripts/docker/tests/.tool-versions.test"
+  local tool_versions
+  tool_versions="$(git rev-parse --show-toplevel)/scripts/docker/tests/.tool-versions.test"
   cp Dockerfile Dockerfile.effective
   # Act
-  _replace-image-latest-by-specific-version
+  TOOL_VERSIONS="$tool_versions" _replace-image-latest-by-specific-version
   # Assert
   grep -q "FROM python:.*-alpine.*@sha256:.*" Dockerfile.effective && return 0 || return 1
 }
 
+# Test creation of effective version file.
 function test-docker-version-file() {
 
   # Arrange
@@ -95,30 +106,36 @@ function test-docker-version-file() {
   ) && return 0 || return 1
 }
 
+# Test docker check helper command output.
 function test-docker-test() {
 
   # Arrange
-  cmd="python --version"
-  check="Python"
+  local cmd="python --version"
+  local check="Python"
+  local output
   # Act
-  output=$(docker-check-test)
+  output=$(cmd="$cmd" check="$check" docker-check-test)
   # Assert
-  echo "$output" | grep -q "PASS"
+  echo "$output" | grep -q "PASS" && return 0 || return 1
 }
 
+# Test docker run helper output.
 function test-docker-run() {
 
   # Arrange
-  cmd="python --version"
+  local docker_cmd="python --version"
+  local output
   # Act
-  output=$(docker-run)
+  output=$(DOCKER_CMD="$docker_cmd" docker-run)
   # Assert
-  echo "$output" | grep -Eq "Python [0-9]+\.[0-9]+\.[0-9]+"
+  echo "$output" | grep -Eq "Python [0-9]+\.[0-9]+\.[0-9]+" && return 0 || return 1
 }
 
+# Test cleanup of Docker image resources.
 function test-docker-clean() {
 
   # Arrange
+  local version
   version="$(_get-effective-version)"
   # Act
   docker-clean
@@ -126,22 +143,26 @@ function test-docker-clean() {
   docker image inspect "${DOCKER_IMAGE}:${version}" > /dev/null 2>&1 && return 1 || return 0
 }
 
+# Test retrieval and pull of external image version.
 function test-docker-get-image-version-and-pull() {
 
   # Arrange
-  name="ghcr.io/nhs-england-tools/github-runner-image"
-  match_version=".*-rt.*"
+  local name="ghcr.io/nhs-england-tools/github-runner-image"
+  local match_version=".*-rt.*"
   # Act
-  docker-get-image-version-and-pull > /dev/null 2>&1
+  name="$name" match_version="$match_version" docker-get-image-version-and-pull > /dev/null 2>&1
   # Assert
   docker images \
     --filter=reference="$name" \
     --format "{{.Tag}}" \
-  | grep -vq "<none>"
+  | grep -vq "<none>" && return 0 || return 1
 }
 
 # ==============================================================================
 
+# Check whether the supplied argument represents a true boolean value.
+# Arguments:
+#   $1=[value to evaluate]
 function is-arg-true() {
 
   if [[ "$1" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$ ]]; then
