@@ -38,17 +38,14 @@ set -euo pipefail
 
 # ==============================================================================
 
-# Run editorconfig checks in native or Docker mode.
 function main() {
 
   cd "$(git rev-parse --show-toplevel)"
 
   # shellcheck disable=SC2154
-  local dry_run_opt=""
   is-arg-true "${dry_run:-false}" && dry_run_opt="--dry-run"
 
-  local check=${check:-working-tree-changes}
-  local filter
+  check=${check:-working-tree-changes}
   case $check in
     "all")
       filter="git ls-files"
@@ -67,13 +64,11 @@ function main() {
       ;;
   esac
 
-  if command -v editorconfig > /dev/null 2>&1 && ! is-arg-true "${FORCE_USE_DOCKER:-false}"; then
+  if command -v editorconfig-checker > /dev/null 2>&1 && ! is-arg-true "${FORCE_USE_DOCKER:-false}"; then
     filter="$filter" dry_run_opt="${dry_run_opt:-}" run-editorconfig-natively
   else
     filter="$filter" dry_run_opt="${dry_run_opt:-}" run-editorconfig-in-docker
   fi
-
-  return 0
 }
 
 # Run editorconfig natively.
@@ -83,11 +78,9 @@ function main() {
 function run-editorconfig-natively() {
 
   # shellcheck disable=SC2046,SC2086
-  editorconfig \
+  editorconfig-checker \
     -config "$PWD/scripts/config/editorconfig-checker.json" \
     --exclude '.git/' $dry_run_opt $($filter)
-
-  return 0
 }
 
 # Run editorconfig in a Docker container.
@@ -108,15 +101,10 @@ function run-editorconfig-in-docker() {
     --volume "$PWD":/check \
     "$image" \
       sh -c "ec -config /check/scripts/config/editorconfig-checker.json --exclude '.git/' $dry_run_opt \$($filter) /dev/null"
-
-  return 0
 }
 
 # ==============================================================================
 
-# Check whether the supplied argument represents a true boolean value.
-# Arguments:
-#   $1=[value to evaluate]
 function is-arg-true() {
 
   if [[ "$1" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$ ]]; then
